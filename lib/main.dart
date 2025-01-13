@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-// import 'package:image_picker/image_picker.dart'; // Add the image_picker package to pubspec.yaml
 
 void main() {
   runApp(MyApp());
@@ -28,82 +27,131 @@ class _ProfilePageState extends State<ProfilePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.black,
       appBar: AppBar(
         backgroundColor: Colors.black,
-        leading: IconButton(
-          icon: Icon(Icons.edit, color: Colors.white),
-          onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                  builder: (context) => EditProfilePage(imagePath: _imagePath)),
-            );
-          },
-        ),
+        title: Text('Profile', style: TextStyle(color: Colors.white)),
         actions: [
           IconButton(
-            icon: Icon(Icons.menu, color: Colors.white),
+            icon: Icon(Icons.menu),
             onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => MenuPage()),
-              );
+              _showMenu(context);
             },
           ),
         ],
-        elevation: 0,
       ),
-      backgroundColor: Colors.black,
-      body: Column(
-        children: [
-          GestureDetector(
-            onTap: () {
-              // Implement profile image change functionality here
-              _pickImage();
-            },
-            child: CircleAvatar(
-              radius: 50,
-              backgroundColor: Colors.purple,
-              backgroundImage: NetworkImage(_imagePath),
-              child: _imagePath.isEmpty
-                  ? Icon(Icons.camera_alt, size: 40, color: Colors.white)
-                  : null,
-            ),
-          ),
-          SizedBox(height: 10),
-          Text(
-            _userName,
-            style: TextStyle(color: Colors.white, fontSize: 18),
-          ),
-          Text(
-            _email,
-            style: TextStyle(color: Colors.grey, fontSize: 14),
-          ),
-          SizedBox(height: 20),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              Column(
+      body: CustomScrollView(
+        slivers: [
+          SliverAppBar(
+            expandedHeight: 250,
+            floating: false,
+            pinned: true,
+            backgroundColor: Colors.black,
+            flexibleSpace: FlexibleSpaceBar(
+              background: Stack(
                 children: [
-                  Text(
-                    'Wallpapers',
-                    style: TextStyle(color: Colors.white, fontSize: 16),
+                  Positioned(
+                    top: 40,
+                    left: MediaQuery.of(context).size.width / 2 - 50,
+                    child: GestureDetector(
+                      onTap: () {
+                        // Implement profile image change functionality here
+                        _pickImage();
+                      },
+                      child: CircleAvatar(
+                        radius: 50,
+                        backgroundColor: Colors.purple,
+                        backgroundImage: NetworkImage(_imagePath),
+                        child: _imagePath.isEmpty
+                            ? Icon(Icons.camera_alt,
+                                size: 40, color: Colors.white)
+                            : null,
+                      ),
+                    ),
                   ),
-                  Container(
-                    height: 2,
-                    width: 60,
-                    color: Colors.pink,
-                  )
+                  Positioned(
+                    bottom: 20,
+                    left: MediaQuery.of(context).size.width /
+                        4, // Centered alignment
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Text(
+                          _userName,
+                          style: TextStyle(color: Colors.white, fontSize: 18),
+                        ),
+                        Text(
+                          _email,
+                          style: TextStyle(color: Colors.grey, fontSize: 14),
+                        ),
+                      ],
+                    ),
+                  ),
                 ],
               ),
-            ],
+            ),
           ),
-          Expanded(
-            child: Center(
-              child: Text(
-                'No Posts!',
-                style: TextStyle(color: Colors.grey, fontSize: 16),
-              ),
+          SliverList(
+            delegate: SliverChildListDelegate(
+              [
+                SizedBox(height: 20),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Column(
+                      children: [
+                        Text(
+                          'Wallpapers(9)',
+                          style: TextStyle(color: Colors.white, fontSize: 16),
+                        ),
+                        Container(
+                          height: 2,
+                          width: 60,
+                          color: Colors.pink,
+                        )
+                      ],
+                    ),
+                  ],
+                ),
+                SizedBox(height: 15),
+                // Wallpaper Grid
+                GridView.builder(
+                  padding: EdgeInsets.all(10),
+                  shrinkWrap: true,
+                  physics: NeverScrollableScrollPhysics(),
+                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    crossAxisSpacing: 10,
+                    mainAxisSpacing: 10,
+                    childAspectRatio: 0.6, // Vertical rectangle
+                  ),
+                  itemCount: 9,
+                  itemBuilder: (context, index) {
+                    return GestureDetector(
+                      onTap: () {
+                        // Open wallpaper in a new page
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => WallpaperPage(index: index),
+                          ),
+                        );
+                      },
+                      child: Container(
+                        decoration: BoxDecoration(
+                          image: DecorationImage(
+                            image:
+                                AssetImage('assets/wallpaper${index + 1}.jpg'),
+                            fit: BoxFit.cover,
+                          ),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+                SizedBox(height: 20),
+              ],
             ),
           ),
         ],
@@ -117,57 +165,66 @@ class _ProfilePageState extends State<ProfilePage> {
           "https://via.placeholder.com/150/0000FF/808080?Text=New+Image";
     });
   }
+
+  void _showMenu(BuildContext context) {
+    showMenu(
+      context: context,
+      position: RelativeRect.fromLTRB(100.0, 100.0, 0.0, 0.0),
+      items: [
+        PopupMenuItem(
+          child: Text('Edit Profile'),
+          value: 'edit_profile',
+        ),
+        PopupMenuItem(
+          child: Text('Settings'),
+          value: 'settings',
+        ),
+        PopupMenuItem(
+          child: Text('Logout'),
+          value: 'logout',
+        ),
+      ],
+    ).then((value) {
+      if (value == 'edit_profile') {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => EditProfilePage(imagePath: _imagePath),
+          ),
+        );
+      } else if (value == 'logout') {
+        // Implement logout functionality
+      }
+    });
+  }
 }
 
-class MenuPage extends StatelessWidget {
+class WallpaperPage extends StatelessWidget {
+  final int index;
+
+  WallpaperPage({required this.index});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
         backgroundColor: Colors.black,
-        title: Text('Menu', style: TextStyle(color: Colors.white)),
-        leading: BackButton(color: Colors.white),
+        title: Text('Wallpaper ${index + 1}',
+            style: TextStyle(color: Colors.white)),
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () {
+            Navigator.pop(context);
+          },
+        ),
         elevation: 0,
       ),
-      body: ListView(
-        children: [
-          ListTile(
-            leading: Icon(Icons.star, color: Colors.white),
-            title: Text('Buy Premium', style: TextStyle(color: Colors.white)),
-          ),
-          ListTile(
-            leading: Icon(Icons.wallpaper, color: Colors.white),
-            title: Text('Wallpapers', style: TextStyle(color: Colors.white)),
-          ),
-          ListTile(
-            leading: Icon(Icons.view_carousel, color: Colors.white),
-            title: Text('Setups', style: TextStyle(color: Colors.white)),
-          ),
-          ListTile(
-            leading: Icon(Icons.download, color: Colors.white),
-            title:
-                Text('Downloaded Walls', style: TextStyle(color: Colors.white)),
-          ),
-          ListTile(
-            leading: Icon(Icons.clear, color: Colors.white),
-            title: Text('Clear All Downloads',
-                style: TextStyle(color: Colors.white)),
-          ),
-          ListTile(
-            leading: Icon(Icons.rate_review, color: Colors.white),
-            title: Text('Review Status', style: TextStyle(color: Colors.white)),
-          ),
-          ListTile(
-            leading: Icon(Icons.color_lens, color: Colors.white),
-            title: Text('Themes', style: TextStyle(color: Colors.white)),
-          ),
-          ListTile(
-            leading: Icon(Icons.share, color: Colors.white),
-            title: Text('Share Your Profile',
-                style: TextStyle(color: Colors.white)),
-          ),
-        ],
+      body: Center(
+        child: Image.asset(
+          'assets/wallpaper${index + 1}.jpg', // Open the wallpaper based on index
+          fit: BoxFit.cover,
+        ),
       ),
     );
   }
@@ -208,7 +265,12 @@ class _EditProfilePageState extends State<EditProfilePage> {
       appBar: AppBar(
         backgroundColor: Colors.black,
         title: Text('Edit Profile', style: TextStyle(color: Colors.white)),
-        leading: BackButton(color: Colors.white),
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () {
+            Navigator.pop(context);
+          },
+        ),
         elevation: 0,
       ),
       body: Padding(
@@ -222,7 +284,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
               },
               child: CircleAvatar(
                 radius: 50,
-                backgroundColor: Colors.purple,
+                backgroundColor: const Color.fromARGB(255, 255, 218, 116),
                 backgroundImage:
                     _imagePath != null ? NetworkImage(_imagePath!) : null,
                 child: _imagePath == null
@@ -279,7 +341,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                   });
                 },
                 checkColor: Colors.black,
-                activeColor: Colors.pink,
+                activeColor: Colors.blue,
                 controlAffinity: ListTileControlAffinity.leading,
               );
             }).toList(),
@@ -289,7 +351,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
                 // Handle profile update logic
                 // For example, save the new information and interests
               },
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.pink),
+              style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color.fromARGB(255, 255, 195, 215)),
               child: Text('Update'),
             ),
           ],
@@ -297,17 +360,4 @@ class _EditProfilePageState extends State<EditProfilePage> {
       ),
     );
   }
-
-  // Future<void> _pickImage() async {
-  //   final picker = ImagePicker();
-  //   final pickedFile = await picker.pickImage(source: ImageSource.gallery);
-
-  //   if (pickedFile != null) {
-  //     setState(() {
-  //       _imagePath = pickedFile.path;
-  //     });
-  //   }
-  // }
 }
-
-// hello
